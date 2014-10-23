@@ -81,6 +81,14 @@ public class TableStatements {
         }
         return selectAll;
     }
+    
+    /** ends with an space to simplify appending to this string. */
+    public String getSelectColumns(String[] columns) {
+        if (selectAll == null) {
+            selectAll = SqlUtils.createSqlSelect(tablename, "T", columns);
+        }
+        return selectAll;
+    }
 
     /** ends with an space to simplify appending to this string. */
     public String getSelectKeys() {

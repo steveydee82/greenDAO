@@ -56,7 +56,7 @@ import de.greenrobot.dao.query.QueryBuilder;
  * 
  * 3.) identityScope
  */
-public abstract class AbstractDao<T, K> {
+public abstract class AbstractDao<T, K> implements Dao<T, K>  {
     protected final SQLiteDatabase db;
     protected final DaoConfig config;
     protected IdentityScope<K, T> identityScope;
@@ -83,7 +83,11 @@ public abstract class AbstractDao<T, K> {
         pkOrdinal = config.pkProperty != null ? config.pkProperty.ordinal : -1;
     }
 
-    public AbstractDaoSession getSession() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#getSession()
+	 */
+    @Override
+	public AbstractDaoSession getSession() {
         return session;
     }
 
@@ -91,38 +95,59 @@ public abstract class AbstractDao<T, K> {
         return config.statements;
     }
 
-    public String getTablename() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#getTablename()
+	 */
+    @Override
+	public String getTablename() {
         return config.tablename;
     }
 
-    public Property[] getProperties() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#getProperties()
+	 */
+    @Override
+	public Property[] getProperties() {
         return config.properties;
     }
 
-    public Property getPkProperty() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#getPkProperty()
+	 */
+    @Override
+	public Property getPkProperty() {
         return config.pkProperty;
     }
 
-    public String[] getAllColumns() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#getAllColumns()
+	 */
+    @Override
+	public String[] getAllColumns() {
         return config.allColumns;
     }
 
-    public String[] getPkColumns() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#getPkColumns()
+	 */
+    @Override
+	public String[] getPkColumns() {
         return config.pkColumns;
     }
 
-    public String[] getNonPkColumns() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#getNonPkColumns()
+	 */
+    @Override
+	public String[] getNonPkColumns() {
         return config.nonPkColumns;
     }
 
-    /**
-     * Loads and entity for the given PK.
-     * 
-     * @param key
-     *            a PK value or null
-     * @return The entity or null, if no entity matched the PK value
-     */
-    public T load(K key) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#load(K)
+	 */
+    @Override
+	public T load(K key) {
         assertSinglePk();
         if (key == null) {
             return null;
@@ -139,7 +164,11 @@ public abstract class AbstractDao<T, K> {
         return loadUniqueAndCloseCursor(cursor);
     }
 
-    public T loadByRowId(long rowId) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#loadByRowId(long)
+	 */
+    @Override
+	public T loadByRowId(long rowId) {
         String[] idArray = new String[] { Long.toString(rowId) };
         Cursor cursor = db.rawQuery(statements.getSelectByRowId(), idArray);
         return loadUniqueAndCloseCursor(cursor);
@@ -163,14 +192,20 @@ public abstract class AbstractDao<T, K> {
         return loadCurrent(cursor, 0, true);
     }
 
-    /** Loads all available entities from the database. */
-    public List<T> loadAll() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#loadAll()
+	 */
+    @Override
+	public List<T> loadAll() {
         Cursor cursor = db.rawQuery(statements.getSelectAll(), null);
         return loadAllAndCloseCursor(cursor);
     }
 
-    /** Detaches an entity from the identity scope (session). Subsequent query results won't return this object. */
-    public boolean detach(T entity) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#detach(T)
+	 */
+    @Override
+	public boolean detach(T entity) {
         if (identityScope != null) {
             K key = getKeyVerified(entity);
             return identityScope.detach(key, entity);
@@ -187,71 +222,53 @@ public abstract class AbstractDao<T, K> {
         }
     }
 
-    /**
-     * Inserts the given entities in the database using a transaction.
-     * 
-     * @param entities
-     *            The entities to insert.
-     */
-    public void insertInTx(Iterable<T> entities) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#insertInTx(java.lang.Iterable)
+	 */
+    @Override
+	public void insertInTx(Iterable<T> entities) {
         insertInTx(entities, isEntityUpdateable());
     }
 
-    /**
-     * Inserts the given entities in the database using a transaction.
-     * 
-     * @param entities
-     *            The entities to insert.
-     */
-    public void insertInTx(T... entities) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#insertInTx(T)
+	 */
+    @Override
+	public void insertInTx(T... entities) {
         insertInTx(Arrays.asList(entities), isEntityUpdateable());
     }
 
-    /**
-     * Inserts the given entities in the database using a transaction. The given entities will become tracked if the PK
-     * is set.
-     * 
-     * @param entities
-     *            The entities to insert.
-     * @param setPrimaryKey
-     *            if true, the PKs of the given will be set after the insert; pass false to improve performance.
-     */
-    public void insertInTx(Iterable<T> entities, boolean setPrimaryKey) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#insertInTx(java.lang.Iterable, boolean)
+	 */
+    @Override
+	public void insertInTx(Iterable<T> entities, boolean setPrimaryKey) {
         SQLiteStatement stmt = statements.getInsertStatement();
         executeInsertInTx(stmt, entities, setPrimaryKey);
     }
 
-    /**
-     * Inserts or replaces the given entities in the database using a transaction. The given entities will become
-     * tracked if the PK is set.
-     * 
-     * @param entities
-     *            The entities to insert.
-     * @param setPrimaryKey
-     *            if true, the PKs of the given will be set after the insert; pass false to improve performance.
-     */
-    public void insertOrReplaceInTx(Iterable<T> entities, boolean setPrimaryKey) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#insertOrReplaceInTx(java.lang.Iterable, boolean)
+	 */
+    @Override
+	public void insertOrReplaceInTx(Iterable<T> entities, boolean setPrimaryKey) {
         SQLiteStatement stmt = statements.getInsertOrReplaceStatement();
         executeInsertInTx(stmt, entities, setPrimaryKey);
     }
 
-    /**
-     * Inserts or replaces the given entities in the database using a transaction.
-     * 
-     * @param entities
-     *            The entities to insert.
-     */
-    public void insertOrReplaceInTx(Iterable<T> entities) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#insertOrReplaceInTx(java.lang.Iterable)
+	 */
+    @Override
+	public void insertOrReplaceInTx(Iterable<T> entities) {
         insertOrReplaceInTx(entities, isEntityUpdateable());
     }
 
-    /**
-     * Inserts or replaces the given entities in the database using a transaction.
-     * 
-     * @param entities
-     *            The entities to insert.
-     */
-    public void insertOrReplaceInTx(T... entities) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#insertOrReplaceInTx(T)
+	 */
+    @Override
+	public void insertOrReplaceInTx(T... entities) {
         insertOrReplaceInTx(Arrays.asList(entities), isEntityUpdateable());
     }
 
@@ -284,22 +301,19 @@ public abstract class AbstractDao<T, K> {
         }
     }
 
-    /**
-     * Insert an entity into the table associated with a concrete DAO.
-     * 
-     * @return row ID of newly inserted entity
-     */
-    public long insert(T entity) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#insert(T)
+	 */
+    @Override
+	public long insert(T entity) {
         return executeInsert(entity, statements.getInsertStatement());
     }
 
-    /**
-     * Insert an entity into the table associated with a concrete DAO <b>without</b> setting key property. Warning: This
-     * may be faster, but the entity should not be used anymore. The entity also won't be attached to identy scope.
-     * 
-     * @return row ID of newly inserted entity
-     */
-    public long insertWithoutSettingPk(T entity) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#insertWithoutSettingPk(T)
+	 */
+    @Override
+	public long insertWithoutSettingPk(T entity) {
         SQLiteStatement stmt = statements.getInsertStatement();
         long rowId;
         if (db.isDbLockedByCurrentThread()) {
@@ -323,12 +337,11 @@ public abstract class AbstractDao<T, K> {
         return rowId;
     }
 
-    /**
-     * Insert an entity into the table associated with a concrete DAO.
-     * 
-     * @return row ID of newly inserted entity
-     */
-    public long insertOrReplace(T entity) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#insertOrReplace(T)
+	 */
+    @Override
+	public long insertOrReplace(T entity) {
         return executeInsert(entity, statements.getInsertOrReplaceStatement());
     }
 
@@ -457,30 +470,37 @@ public abstract class AbstractDao<T, K> {
         return dao.loadCurrent(cursor, offset, /* TODO check this */true);
     }
 
-    /** A raw-style query where you can pass any WHERE clause and arguments. */
-    public List<T> queryRaw(String where, String... selectionArg) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#queryRaw(java.lang.String, java.lang.String)
+	 */
+    @Override
+	public List<T> queryRaw(String where, String... selectionArg) {
         Cursor cursor = db.rawQuery(statements.getSelectAll() + where, selectionArg);
         return loadAllAndCloseCursor(cursor);
     }
 
-    /**
-     * Creates a repeatable {@link Query} object based on the given raw SQL where you can pass any WHERE clause and
-     * arguments.
-     */
-    public Query<T> queryRawCreate(String where, Object... selectionArg) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#queryRawCreate(java.lang.String, java.lang.Object)
+	 */
+    @Override
+	public Query<T> queryRawCreate(String where, Object... selectionArg) {
         List<Object> argList = Arrays.asList(selectionArg);
         return queryRawCreateListArgs(where, argList);
     }
 
-    /**
-     * Creates a repeatable {@link Query} object based on the given raw SQL where you can pass any WHERE clause and
-     * arguments.
-     */
-    public Query<T> queryRawCreateListArgs(String where, Collection<Object> selectionArg) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#queryRawCreateListArgs(java.lang.String, java.util.Collection)
+	 */
+    @Override
+	public Query<T> queryRawCreateListArgs(String where, Collection<Object> selectionArg) {
         return Query.internalCreate(this, statements.getSelectAll() + where, selectionArg.toArray());
     }
 
-    public void deleteAll() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#deleteAll()
+	 */
+    @Override
+	public void deleteAll() {
         // String sql = SqlUtils.createSqlDelete(config.tablename, null);
         // db.execSQL(sql);
 
@@ -490,15 +510,21 @@ public abstract class AbstractDao<T, K> {
         }
     }
 
-    /** Deletes the given entity from the database. Currently, only single value PK entities are supported. */
-    public void delete(T entity) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#delete(T)
+	 */
+    @Override
+	public void delete(T entity) {
         assertSinglePk();
         K key = getKeyVerified(entity);
         deleteByKey(key);
     }
 
-    /** Deletes an entity with the given PK from the database. Currently, only single value PK entities are supported. */
-    public void deleteByKey(K key) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#deleteByKey(K)
+	 */
+    @Override
+	public void deleteByKey(K key) {
         assertSinglePk();
         SQLiteStatement stmt = statements.getDeleteStatement();
         if (db.isDbLockedByCurrentThread()) {
@@ -577,48 +603,43 @@ public abstract class AbstractDao<T, K> {
         }
     }
 
-    /**
-     * Deletes the given entities in the database using a transaction.
-     * 
-     * @param entities
-     *            The entities to delete.
-     */
-    public void deleteInTx(Iterable<T> entities) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#deleteInTx(java.lang.Iterable)
+	 */
+    @Override
+	public void deleteInTx(Iterable<T> entities) {
         deleteInTxInternal(entities, null);
     }
 
-    /**
-     * Deletes the given entities in the database using a transaction.
-     * 
-     * @param entities
-     *            The entities to delete.
-     */
-    public void deleteInTx(T... entities) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#deleteInTx(T)
+	 */
+    @Override
+	public void deleteInTx(T... entities) {
         deleteInTxInternal(Arrays.asList(entities), null);
     }
 
-    /**
-     * Deletes all entities with the given keys in the database using a transaction.
-     * 
-     * @param keys
-     *            Keys of the entities to delete.
-     */
-    public void deleteByKeyInTx(Iterable<K> keys) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#deleteByKeyInTx(java.lang.Iterable)
+	 */
+    @Override
+	public void deleteByKeyInTx(Iterable<K> keys) {
         deleteInTxInternal(null, keys);
     }
 
-    /**
-     * Deletes all entities with the given keys in the database using a transaction.
-     * 
-     * @param keys
-     *            Keys of the entities to delete.
-     */
-    public void deleteByKeyInTx(K... keys) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#deleteByKeyInTx(K)
+	 */
+    @Override
+	public void deleteByKeyInTx(K... keys) {
         deleteInTxInternal(null, Arrays.asList(keys));
     }
 
-    /** Resets all locally changed properties of the entity by reloading the values from the database. */
-    public void refresh(T entity) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#refresh(T)
+	 */
+    @Override
+	public void refresh(T entity) {
         assertSinglePk();
         K key = getKeyVerified(entity);
         String sql = statements.getSelectByKey();
@@ -639,7 +660,11 @@ public abstract class AbstractDao<T, K> {
         }
     }
 
-    public void update(T entity) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#update(T)
+	 */
+    @Override
+	public void update(T entity) {
         assertSinglePk();
         SQLiteStatement stmt = statements.getUpdateStatement();
         if (db.isDbLockedByCurrentThread()) {
@@ -660,7 +685,11 @@ public abstract class AbstractDao<T, K> {
         }
     }
 
-    public QueryBuilder<T> queryBuilder() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#queryBuilder()
+	 */
+    @Override
+	public QueryBuilder<T> queryBuilder() {
         return QueryBuilder.internalCreate(this);
     }
 
@@ -709,13 +738,11 @@ public abstract class AbstractDao<T, K> {
     protected void attachEntity(T entity) {
     }
 
-    /**
-     * Updates the given entities in the database using a transaction.
-     * 
-     * @param entities
-     *            The entities to insert.
-     */
-    public void updateInTx(Iterable<T> entities) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#updateInTx(java.lang.Iterable)
+	 */
+    @Override
+	public void updateInTx(Iterable<T> entities) {
         SQLiteStatement stmt = statements.getUpdateStatement();
         db.beginTransaction();
         try {
@@ -739,13 +766,11 @@ public abstract class AbstractDao<T, K> {
         }
     }
 
-    /**
-     * Updates the given entities in the database using a transaction.
-     * 
-     * @param entities
-     *            The entities to update.
-     */
-    public void updateInTx(T... entities) {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#updateInTx(T)
+	 */
+    @Override
+	public void updateInTx(T... entities) {
         updateInTx(Arrays.asList(entities));
     }
 
@@ -755,7 +780,11 @@ public abstract class AbstractDao<T, K> {
         }
     }
 
-    public long count() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#count()
+	 */
+    @Override
+	public long count() {
         return DatabaseUtils.queryNumEntries(db, '\'' + config.tablename + '\'');
     }
 
@@ -773,8 +802,11 @@ public abstract class AbstractDao<T, K> {
         }
     }
 
-    /** Gets the SQLiteDatabase for custom database access. Not needed for greenDAO entities. */
-    public SQLiteDatabase getDatabase() {
+    /* (non-Javadoc)
+	 * @see de.greenrobot.dao.Dao#getDatabase()
+	 */
+    @Override
+	public SQLiteDatabase getDatabase() {
         return db;
     }
 

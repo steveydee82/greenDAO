@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import android.database.Cursor;
 import de.greenrobot.dao.AbstractDao;
 import de.greenrobot.dao.AbstractDaoSession;
 import de.greenrobot.dao.DaoException;
@@ -65,6 +66,8 @@ public class QueryBuilder<T> {
     private Integer limit;
 
     private Integer offset;
+    
+    private String[] selectColumns;
 
     /** For internal use by greenDAO only. */
     public static <T2> QueryBuilder<T2> internalCreate(AbstractDao<T2, ?> dao) {
@@ -195,7 +198,7 @@ public class QueryBuilder<T> {
             orderBuilder.append(ascOrDescWithLeadingSpace);
         }
     }
-
+    
     /** Adds the given properties to the ORDER BY section using the given custom order. */
     public QueryBuilder<T> orderCustom(Property property, String customOrderForProperty) {
         checkOrderBuilder();
@@ -212,6 +215,21 @@ public class QueryBuilder<T> {
         checkOrderBuilder();
         orderBuilder.append(rawOrder);
         return this;
+    }
+    
+    /**
+     * Sets the properties that will be returned. For use only if retrieving a Cursor using .cursor()
+     * @param properties
+     * @return
+     */
+    public QueryBuilder<T> select(Property...properties) {
+    	selectColumns = new String[properties.length];
+    	
+    	for(int ii = 0; ii < properties.length; ii++) {
+    		selectColumns[ii] = properties[ii].columnName;
+    	}
+    	
+    	return this;
     }
 
     protected StringBuilder append(StringBuilder builder, Property property) {
@@ -258,9 +276,17 @@ public class QueryBuilder<T> {
     public Query<T> build() {
         String select;
         if (joinBuilder == null || joinBuilder.length() == 0) {
-            select = InternalQueryDaoAccess.getStatements(dao).getSelectAll();
+        	if(selectColumns != null) {
+        		select = InternalQueryDaoAccess.getStatements(dao).getSelectColumns(selectColumns);
+        	} else {
+        		select = InternalQueryDaoAccess.getStatements(dao).getSelectAll();	
+        	}
         } else {
-            select = SqlUtils.createSqlSelect(dao.getTablename(), tablePrefix, dao.getAllColumns());
+        	if(selectColumns != null) {
+        		select = SqlUtils.createSqlSelect(dao.getTablename(), tablePrefix, selectColumns);
+        	} else {
+        		select = SqlUtils.createSqlSelect(dao.getTablename(), tablePrefix, dao.getAllColumns());	
+        	}
         }
         StringBuilder builder = new StringBuilder(select);
 
@@ -417,6 +443,15 @@ public class QueryBuilder<T> {
      */
     public T uniqueOrThrow() {
         return build().uniqueOrThrow();
+    }
+    
+    /**
+     * Shorthand for {@link QueryBuilder#build() build()}.{@link Query#cursor() cursor()}; see
+     * {@link Query#cursor()} for details. To execute a query more than once, you should build the query and keep
+     * the {@link Query} object for efficiency reasons.
+     */
+    public Cursor cursor() {
+    	return build().cursor();
     }
 
     /**

@@ -120,6 +120,12 @@ public class Query<T> extends AbstractQuery<T> {
         Cursor cursor = dao.getDatabase().rawQuery(sql, parameters);
         return daoAccess.loadAllAndCloseCursor(cursor);
     }
+    
+    /** Executes the query and returns the results as a cursor. */
+    public Cursor cursor() {
+        checkThread();
+        return dao.getDatabase().rawQuery(sql, parameters);
+    }
 
     /**
      * Executes the query and returns the result as a list that lazy loads the entities on first access. Entities are
@@ -162,6 +168,7 @@ public class Query<T> extends AbstractQuery<T> {
         Cursor cursor = dao.getDatabase().rawQuery(sql, parameters);
         return daoAccess.loadUniqueAndCloseCursor(cursor);
     }
+   
 
     /**
      * Executes the query and returns the unique result (never null).
