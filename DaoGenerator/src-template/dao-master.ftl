@@ -90,10 +90,12 @@ public class DaoMaster extends AbstractDaoMaster {
 </#list>
     }
     
+    @Override
     public DaoSession newSession() {
         return new DaoSession(db, IdentityScopeType.Session, daoConfigMap);
     }
     
+    @Override
     public DaoSession newSession(IdentityScopeType type) {
         return new DaoSession(db, type, daoConfigMap);
     }

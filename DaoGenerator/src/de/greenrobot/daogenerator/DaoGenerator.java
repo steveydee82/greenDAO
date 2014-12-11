@@ -78,15 +78,21 @@ public class DaoGenerator {
 
     /** Generates all entities and DAOs for the given schema. */
     public void generateAll(Schema schema, String outDir) throws Exception {
-        generateAll(schema, outDir, null);
+    	generateAll(schema, outDir, outDir);
+    }
+    
+    /** Generates all entities and DAOs for the given schema. */
+    public void generateAll(Schema schema, String entityOutDir, String daoOutDir) throws Exception {
+        generateAll(schema, entityOutDir, daoOutDir, null);
     }
 
     /** Generates all entities and DAOs for the given schema. */
-    public void generateAll(Schema schema, String outDir, String outDirTest) throws Exception {
+    public void generateAll(Schema schema, String entityOutDir, String daoOutDir, String outDirTest) throws Exception {
         long start = System.currentTimeMillis();
 
-        File outDirFile = toFileForceExists(outDir);
-
+        File entityOutDirFile = toFileForceExists(entityOutDir);
+        File daoOutDirFile = toFileForceExists(daoOutDir);
+        
         File outDirTestFile = null;
         if (outDirTest != null) {
             outDirTestFile = toFileForceExists(outDirTest);
@@ -99,9 +105,9 @@ public class DaoGenerator {
 
         List<Entity> entities = schema.getEntities();
         for (Entity entity : entities) {
-            generate(templateDao, outDirFile, entity.getJavaPackageDao(), entity.getClassNameDao(), schema, entity);
+            generate(templateDao, daoOutDirFile, entity.getJavaPackageDao(), entity.getClassNameDao(), schema, entity);
             if (!entity.isProtobuf() && !entity.isSkipGeneration()) {
-                generate(templateEntity, outDirFile, entity.getJavaPackage(), entity.getClassName(), schema, entity);
+                generate(templateEntity, entityOutDirFile, entity.getJavaPackage(), entity.getClassName(), schema, entity);
             }
             if (outDirTestFile != null && !entity.isSkipGenerationTest()) {
                 String javaPackageTest = entity.getJavaPackageTest();
@@ -116,12 +122,12 @@ public class DaoGenerator {
             for (ContentProvider contentProvider : entity.getContentProviders()) {
                 Map<String, Object> additionalObjectsForTemplate = new HashMap<String, Object>();
                 additionalObjectsForTemplate.put("contentProvider", contentProvider);
-                generate(templateContentProvider, outDirFile, entity.getJavaPackage(), entity.getClassName()
+                generate(templateContentProvider, daoOutDirFile, entity.getJavaPackage(), entity.getClassName()
                         + "ContentProvider", schema, entity, additionalObjectsForTemplate);
             }
         }
-        generate(templateDaoMaster, outDirFile, schema.getDefaultJavaPackageDao(), "DaoMaster", schema, null);
-        generate(templateDaoSession, outDirFile, schema.getDefaultJavaPackageDao(), "DaoSession", schema, null);
+        generate(templateDaoMaster, daoOutDirFile, schema.getDefaultJavaPackageDao(), "DaoMaster", schema, null);
+        generate(templateDaoSession, daoOutDirFile, schema.getDefaultJavaPackageDao(), "DaoSession", schema, null);
 
         long time = System.currentTimeMillis() - start;
         System.out.println("Processed " + entities.size() + " entities in " + time + "ms");

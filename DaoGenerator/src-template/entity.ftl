@@ -59,6 +59,7 @@ as ifc>${ifc}<#if ifc_has_next>, </#if></#list></#if> {
     private ${property.javaType} ${property.propertyName};
 </#list>
 
+
 <#if entity.active>
     /** Used to resolve relations */
     private transient DaoSession daoSession;
@@ -85,6 +86,13 @@ as ifc>${ifc}<#if ifc_has_next>, </#if></#list></#if> {
 ${keepFields!}    // KEEP FIELDS END
 
 </#if>
+
+	@Override
+	public String getTableName() {
+		return "${entity.tableName}";
+	}
+
+
 <#if entity.constructors>
     public ${entity.className}() {
     }
