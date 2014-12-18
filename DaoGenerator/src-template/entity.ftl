@@ -22,6 +22,7 @@ along with greenDAO Generator.  If not, see <http://www.gnu.org/licenses/>.
 <#assign complexTypes = ["String", "ByteArray", "Date"]/>
 package ${entity.javaPackage};
 
+import de.greenrobot.dao.Property;
 <#if entity.toManyRelations?has_content>
 import java.util.List;
 </#if>
@@ -87,9 +88,21 @@ ${keepFields!}    // KEEP FIELDS END
 
 </#if>
 
+    /**
+     * Properties of entity ${entity.className}.<br/>
+     * Can be used for QueryBuilder and for referencing column names.
+    */
+    public static class Properties {
+<#list entity.propertiesColumns as property>
+        public final static Property ${property.propertyName?cap_first} = new Property(${property_index}, ${property.javaType}.class, "${property.propertyName}", ${property.primaryKey?string}, "${property.columnName}", "${entity.tableName}");
+</#list>
+    };
+    
+    public static final String TABLE_NAME = "${entity.tableName}";
+    
 	@Override
 	public String getTableName() {
-		return "${entity.tableName}";
+		return TABLE_NAME; 
 	}
 
 

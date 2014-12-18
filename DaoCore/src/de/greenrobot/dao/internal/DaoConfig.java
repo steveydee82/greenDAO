@@ -17,6 +17,7 @@ package de.greenrobot.dao.internal;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +55,9 @@ public final class DaoConfig implements Cloneable {
         this.db = db;
         try {
             this.tablename = (String) daoClass.getField("TABLENAME").get(null);
-            Property[] properties = reflectProperties(daoClass);
+            //SD 2014-12-17 - Genie modification here, because we moved the properties from the DAO to the entity class.
+            Class<?> entityClass = (Class<?>)((ParameterizedType)daoClass.getGenericSuperclass()).getActualTypeArguments()[0];
+            Property[] properties = reflectProperties(entityClass);
             this.properties = properties;
 
             allColumns = new String[properties.length];
@@ -95,9 +98,9 @@ public final class DaoConfig implements Cloneable {
         }
     }
 
-    private static Property[] reflectProperties(Class<? extends AbstractDao<?, ?>> daoClass)
+    private static Property[] reflectProperties(Class<?> entityClass)
             throws ClassNotFoundException, IllegalArgumentException, IllegalAccessException {
-        Class<?> propertiesClass = Class.forName(daoClass.getName() + "$Properties");
+        Class<?> propertiesClass = Class.forName(entityClass.getName() + "$Properties");
         Field[] fields = propertiesClass.getDeclaredFields();
 
         ArrayList<Property> propertyList = new ArrayList<Property>();

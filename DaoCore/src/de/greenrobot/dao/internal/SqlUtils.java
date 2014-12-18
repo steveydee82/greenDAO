@@ -40,6 +40,17 @@ public class SqlUtils {
         }
         return builder;
     }
+    
+    public static StringBuilder appendColumns(StringBuilder builder, String tableAliases[], String[] columns) {
+        int length = columns.length;
+        for (int i = 0; i < length; i++) {
+            appendColumn(builder, tableAliases[i], columns[i]);
+            if (i < length - 1) {
+                builder.append(',');
+            }
+        }
+        return builder;
+    }
 
     public static StringBuilder appendColumns(StringBuilder builder, String[] columns) {
         int length = columns.length;
@@ -94,14 +105,34 @@ public class SqlUtils {
     }
 
     /** Creates an select for given columns with a trailing space */
-    public static String createSqlSelect(String tablename, String tableAlias, String[] columns) {
+    public static String createSqlSelect(String tablename, String tableAlias, String[] columns, boolean distinct) {
         StringBuilder builder = new StringBuilder("SELECT ");
+        
+        if(distinct) {
+        	builder.append("DISTINCT ");
+        }
         if (tableAlias == null || tableAlias.length() < 0) {
             throw new DaoException("Table alias required");
         }
 
         SqlUtils.appendColumns(builder, tableAlias, columns).append(" FROM ");
         builder.append(tablename).append(' ').append(tableAlias).append(' ');
+        return builder.toString();
+    }
+    
+    /** Creates an select for given columns with a trailing space */
+    public static String createSqlSelect(String tablename, String[] tableAliases, String masterAlias, String[] columns, boolean distinct) {
+        StringBuilder builder = new StringBuilder("SELECT ");
+        
+        if(distinct) {
+        	builder.append("DISTINCT ");
+        }
+        if (tableAliases == null || tableAliases.length != columns.length) {
+            throw new DaoException("Table alias required for each column");
+        }
+
+        SqlUtils.appendColumns(builder, tableAliases, columns).append(" FROM ");
+        builder.append(tablename).append(' ').append(masterAlias).append(' ');
         return builder.toString();
     }
 

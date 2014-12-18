@@ -64,17 +64,7 @@ import ${entity.javaPackage}.${entity.className}.Builder;
 public class ${entity.classNameDao} extends AbstractDao<${entity.className}, ${entity.pkType}> {
 
     public static final String TABLENAME = "${entity.tableName}";
-
-    /**
-     * Properties of entity ${entity.className}.<br/>
-     * Can be used for QueryBuilder and for referencing column names.
-    */
-    public static class Properties {
-<#list entity.propertiesColumns as property>
-        public final static Property ${property.propertyName?cap_first} = new Property(${property_index}, ${property.javaType}.class, "${property.propertyName}", ${property.primaryKey?string}, "${property.columnName}");
-</#list>
-    };
-    
+   
 <#if entity.active>
     private DaoSession daoSession;
 

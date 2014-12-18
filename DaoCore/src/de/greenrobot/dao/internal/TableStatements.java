@@ -74,34 +74,50 @@ public class TableStatements {
         return updateStatement;
     }
 
-    /** ends with an space to simplify appending to this string. */
     public String getSelectAll() {
+    	return getSelectAll(false);
+    }
+    
+    /** ends with an space to simplify appending to this string. */
+    public String getSelectAll(boolean distinct) {
         if (selectAll == null) {
-            selectAll = SqlUtils.createSqlSelect(tablename, "T", allColumns);
+            selectAll = SqlUtils.createSqlSelect(tablename, "T", allColumns, distinct);
         }
         return selectAll;
     }
     
+    public String getSelectColumns(String[] columns, String[] aliases) {
+    	return getSelectColumns(columns, aliases, false);
+    }
+    
     /** ends with an space to simplify appending to this string. */
-    public String getSelectColumns(String[] columns) {
+    public String getSelectColumns(String[] columns, String[] aliases, boolean distinct) {
         if (selectAll == null) {
-            selectAll = SqlUtils.createSqlSelect(tablename, "T", columns);
+            selectAll = SqlUtils.createSqlSelect(tablename, aliases, "T", columns, distinct);
         }
         return selectAll;
     }
 
-    /** ends with an space to simplify appending to this string. */
     public String getSelectKeys() {
+    	return getSelectKeys(false);
+    }
+    
+    /** ends with an space to simplify appending to this string. */
+    public String getSelectKeys(boolean distinct) {
         if (selectKeys == null) {
-            selectKeys = SqlUtils.createSqlSelect(tablename, "T", pkColumns);
+            selectKeys = SqlUtils.createSqlSelect(tablename, "T", pkColumns, distinct);
         }
         return selectKeys;
     }
 
-    // TODO precompile
     public String getSelectByKey() {
+    	return getSelectByKey(false);
+    }
+    
+    // TODO precompile
+    public String getSelectByKey(boolean distinct) {
         if (selectByKey == null) {
-            StringBuilder builder = new StringBuilder(getSelectAll());
+            StringBuilder builder = new StringBuilder(getSelectAll(distinct));
             builder.append("WHERE ");
             SqlUtils.appendColumnsEqValue(builder, "T", pkColumns);
             selectByKey = builder.toString();
@@ -110,8 +126,13 @@ public class TableStatements {
     }
 
     public String getSelectByRowId() {
+    	return getSelectByRowId(false);
+    }
+    
+    
+    public String getSelectByRowId(boolean distinct) {
         if (selectByRowId == null) {
-            selectByRowId = getSelectAll() + "WHERE ROWID=?";
+            selectByRowId = getSelectAll(distinct) + "WHERE ROWID=?";
         }
         return selectByRowId;
     }

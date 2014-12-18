@@ -19,6 +19,7 @@ package de.greenrobot.dao;
 import java.util.Collection;
 
 import de.greenrobot.dao.internal.SqlUtils;
+import de.greenrobot.dao.join.PropertyWithAlias;
 import de.greenrobot.dao.query.WhereCondition;
 import de.greenrobot.dao.query.WhereCondition.PropertyCondition;
 
@@ -27,19 +28,21 @@ import de.greenrobot.dao.query.WhereCondition.PropertyCondition;
  * 
  * @author Markus
  */
-public class Property {
+public class Property implements Selectable {
     public final int ordinal;
     public final Class<?> type;
     public final String name;
     public final boolean primaryKey;
     public final String columnName;
+    public final String tableName;
 
-    public Property(int ordinal, Class<?> type, String name, boolean primaryKey, String columnName) {
+    public Property(int ordinal, Class<?> type, String name, boolean primaryKey, String columnName, String tableName) {
         this.ordinal = ordinal;
         this.type = type;
         this.name = name;
         this.primaryKey = primaryKey;
         this.columnName = columnName;
+        this.tableName = tableName;
     }
 
     /** Creates an "equal ('=')" condition  for this property. */
@@ -116,5 +119,20 @@ public class Property {
     public WhereCondition isNotNull() {
         return new PropertyCondition(this, " IS NOT NULL");
     }
+    
+    public PropertyWithAlias withAlias(String alias) {
+    	return new PropertyWithAlias(this, alias);
+    }
+    
+	@Override
+	public String getColumnName() {
+		return this.columnName;
+	}
+
+	@Override
+	public String getColumnPrefix() {
+		// TODO Auto-generated method stub
+		return this.tableName;
+	}
 
 }

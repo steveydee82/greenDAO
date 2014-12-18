@@ -15,12 +15,14 @@
  */
 package de.greenrobot.dao.query;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.database.Cursor;
 import android.os.Process;
 import de.greenrobot.dao.AbstractDao;
 import de.greenrobot.dao.DaoException;
+import de.greenrobot.dao.Property;
 
 /**
  * A repeatable query returning entities.
@@ -119,6 +121,199 @@ public class Query<T> extends AbstractQuery<T> {
         checkThread();
         Cursor cursor = dao.getDatabase().rawQuery(sql, parameters);
         return daoAccess.loadAllAndCloseCursor(cursor);
+    }
+    
+    /**
+     * Returns a single string field of a list of results
+     * @param property		The property to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<String> listOfFieldAsString(Property property) {
+    	List<Object> values = listOfField(property, FieldType.String);
+    	
+    	List<String> typedValues = new ArrayList<String>();
+    	
+    	for(Object value: values) {
+    		typedValues.add((String)value);
+    	}
+    	
+    	return typedValues;
+    }
+    
+    /**
+     * Returns a double field of a list of results
+     * @param property		The property to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Double> listOfFieldAsDouble(Property property) {
+    	List<Object> values = listOfField(property, FieldType.Double);
+    	
+    	List<Double> typedValues = new ArrayList<Double>();
+    	
+    	for(Object value: values) {
+    		typedValues.add((Double)value);
+    	}
+    	
+    	return typedValues;
+    }
+    
+    /**
+     * Returns an integer field of a list of results
+     * @param property		The property to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Integer> listOfFieldAsInt(Property property) {
+    	List<Object> values = listOfField(property, FieldType.Int);
+    	
+    	List<Integer> typedValues = new ArrayList<Integer>();
+    	
+    	for(Object value: values) {
+    		typedValues.add((Integer)value);
+    	}
+    	
+    	return typedValues;
+    }
+    
+    /**
+     * Returns a long field of a list of results
+     * @param property		The property to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Long> listOfFieldAsLong(Property property) {
+    	List<Object> values = listOfField(property, FieldType.Long);
+    	
+    	List<Long> typedValues = new ArrayList<Long>();
+    	
+    	for(Object value: values) {
+    		typedValues.add((Long)value);
+    	}
+    	
+    	return typedValues;
+    }
+    
+    /**
+     * Returns a byte array string field of a list of results
+     * @param property		The property to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Byte[]> listOfFieldAsByteArray(Property property) {
+    	List<Object> values = listOfField(property, FieldType.ByteArray);
+    	
+    	List<Byte[]> typedValues = new ArrayList<Byte[]>();
+    	
+    	for(Object value: values) {
+    		typedValues.add((Byte[])value);
+    	}
+    	
+    	return typedValues;
+    }
+    
+    /**
+     * Returns a single field of a single result as a string
+     * @param property		The property to retrieve
+     * @return				The value of the property
+     */
+    public String uniqueFieldAsString(Property property) {
+    	return (String)uniqueField(property, FieldType.String);
+    }
+    
+    /**
+     * Returns a single field of a single result as an int
+     * @param property		The property to retrieve
+     * @return				The value of the property
+     */
+    public Integer uniqueFieldAsInt(Property property) {
+    	return (Integer)uniqueField(property, FieldType.Int);
+    }
+    
+    /**
+     * Returns a single field of a single result as a double
+     * @param property		The property to retrieve
+     * @return				The value of the property
+     */
+    public Double uniqueFieldAsDouble(Property property) {
+    	return (Double)uniqueField(property, FieldType.Double);
+    }
+    
+    /**
+     * Returns a single field of a single result as a long
+     * @param property		The property to retrieve
+     * @return				The value of the property
+     */
+    public Long uniqueFieldAsLong(Property property) {
+    	return (Long)uniqueField(property, FieldType.Long);
+    }
+    
+    /**
+     * Returns a single field of a single result as a byte array
+     * @param property		The property to retrieve
+     * @return				The value of the property
+     */
+    public Byte[] uniqueFieldAsByteArray(Property property) {
+    	return (Byte[])uniqueField(property, FieldType.ByteArray);
+    }
+    
+    /**
+     * Returns a single field of a single result
+     * @param property		The property to retrieve
+     * @param fieldType		The type of the property
+     * @return				The value of the property
+     */
+    public Object uniqueField(Property property, FieldType fieldType) {
+    	checkThread();
+        Cursor cursor = dao.getDatabase().rawQuery(sql, parameters);
+        
+        int columnIndex = cursor.getColumnIndex(property.columnName);
+        
+        if(cursor.moveToNext()) {
+        	return getValueFromCursor(cursor, columnIndex, fieldType);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Returns a single field of a list of results
+     * @param property		The property to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Object> listOfField(Property property, FieldType fieldType) {
+    	checkThread();
+        Cursor cursor = dao.getDatabase().rawQuery(sql, parameters);
+        
+        List<Object> toReturn = new ArrayList<Object>();
+        
+        int columnIndex = cursor.getColumnIndex(property.columnName);
+        
+        while(cursor.moveToNext()) {
+        	toReturn.add(getValueFromCursor(cursor, columnIndex, fieldType));
+        }
+        
+        return toReturn;
+    }
+    
+    
+    private Object getValueFromCursor(Cursor cursor, int columnIndex, FieldType fieldType) {
+    	switch(fieldType) {
+	    	case ByteArray:
+	    		return cursor.getBlob(columnIndex);
+	    	case Double:
+	    		return cursor.getDouble(columnIndex);
+	    	case String:
+	    		return cursor.getString(columnIndex);
+	    	case Int:
+	    		return cursor.getInt(columnIndex);
+	    	case Long:
+	    		return cursor.getLong(columnIndex);
+	    	}
+    	
+    	return null;
     }
     
     /** Executes the query and returns the results as a cursor. */

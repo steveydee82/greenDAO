@@ -26,7 +26,10 @@ import de.greenrobot.dao.DaoException;
 import de.greenrobot.dao.DaoLog;
 import de.greenrobot.dao.InternalQueryDaoAccess;
 import de.greenrobot.dao.Property;
+import de.greenrobot.dao.Selectable;
 import de.greenrobot.dao.internal.SqlUtils;
+import de.greenrobot.dao.join.JoinBuilder;
+import de.greenrobot.dao.join.JoinType;
 import de.greenrobot.dao.query.WhereCondition.PropertyCondition;
 
 /**
@@ -55,8 +58,9 @@ public class QueryBuilder<T> {
     public static boolean LOG_VALUES;
 
     private StringBuilder orderBuilder;
-    private StringBuilder joinBuilder;
 
+    private List<JoinBuilder<T>> joinBuilders;
+    
     private final List<WhereCondition> whereConditions;
 
     private final List<Object> values;
@@ -66,8 +70,10 @@ public class QueryBuilder<T> {
     private Integer limit;
 
     private Integer offset;
+    private boolean distinct;
     
     private String[] selectColumns;
+    private String[] tableAliases;
 
     /** For internal use by greenDAO only. */
     public static <T2> QueryBuilder<T2> internalCreate(AbstractDao<T2, ?> dao) {
@@ -83,6 +89,7 @@ public class QueryBuilder<T> {
         this.tablePrefix = tablePrefix;
         values = new ArrayList<Object>();
         whereConditions = new ArrayList<WhereCondition>();
+        joinBuilders = new ArrayList<JoinBuilder<T>>();
     }
 
     private void checkOrderBuilder() {
@@ -163,17 +170,138 @@ public class QueryBuilder<T> {
     }
 
     /** Not supported yet. */
-    public <J> QueryBuilder<J> join(Class<J> entityClass, Property toOneProperty) {
-        throw new UnsupportedOperationException();
-        // return new QueryBuilder<J>();
+//    public <J> QueryBuilder<J> join(Class<J> entityClass, Property toOneProperty) {
+//        throw new UnsupportedOperationException();
+//        // return new QueryBuilder<J>();
+//    }
+//
+//    /** Not supported yet. */
+//    public <J> QueryBuilder<J> joinToMany(Class<J> entityClass, Property toManyProperty) {
+//        throw new UnsupportedOperationException();
+//        // @SuppressWarnings("unchecked")
+//        // AbstractDao<J, ?> joinDao = (AbstractDao<J, ?>) dao.getSession().getDao(entityClass);
+//        // return new QueryBuilder<J>(joinDao, "TX");
+//    }
+    
+    /**
+     * Performs an inner join to the table represented by the specified entity class
+     * @param entityClass		Class of the entity representing the table to join to
+     */
+    public JoinBuilder<T> innerJoin(Class<?> entityClass) {
+    	return join(entityClass, null, JoinType.Inner);
     }
-
-    /** Not supported yet. */
-    public <J> QueryBuilder<J> joinToMany(Class<J> entityClass, Property toManyProperty) {
-        throw new UnsupportedOperationException();
-        // @SuppressWarnings("unchecked")
-        // AbstractDao<J, ?> joinDao = (AbstractDao<J, ?>) dao.getSession().getDao(entityClass);
-        // return new QueryBuilder<J>(joinDao, "TX");
+    
+    /**
+     * Performs an inner join to the table represented by the specified entity class
+     * @param entityClass		Class of the entity representing the table to join to
+     */
+    public JoinBuilder<T> innerJoin(Class<?> entityClass, String alias) {
+    	return join(entityClass, alias, JoinType.Inner);
+    }
+    
+    /**
+     * Performs an inner join to the table with the specified name
+     * @param tableName		The table to join to
+     */
+    public JoinBuilder<T> innerJoin(String tableName) {
+    	return join(tableName, null, JoinType.Inner);
+    }
+    
+    /**
+     * Performs an inner join to the table with the specified name
+     * @param tableName		The table to join to
+     */
+    public JoinBuilder<T> innerJoin(String tableName, String alias) {
+    	return join(tableName, alias, JoinType.Inner);
+    }
+    
+    /**
+     * Performs a left join to the table represented by the specified entity class
+     * @param entityClass		Class of the entity representing the table to join to
+     */
+    public JoinBuilder<T> leftJoin(Class<?> entityClass) {
+    	return join(entityClass, null, JoinType.Left);
+    }
+    
+    /**
+     * Performs a left join to the table represented by the specified entity class
+     * @param entityClass		Class of the entity representing the table to join to
+     */
+    public JoinBuilder<T> leftJoin(Class<?> entityClass, String alias) {
+    	return join(entityClass, alias, JoinType.Left);
+    }
+    
+    /**
+     * Performs a left outer join to the table with the specified name
+     * @param tableName		The table to join to
+     */
+    public JoinBuilder<T> leftJoin(String tableName) {
+    	return join(tableName, null, JoinType.Left);
+    }
+    
+    /**
+     * Performs a left outer join to the table with the specified name
+     * @param tableName		The table to join to
+     */
+    public JoinBuilder<T> leftJoin(String tableName, String alias) {
+    	return join(tableName, alias, JoinType.Left);
+    }
+    
+    /**
+     * Performs a left join to the table represented by the specified entity class
+     * @param entityClass		Class of the entity representing the table to join to
+     */
+    public JoinBuilder<T> crossJoin(Class<?> entityClass) {
+    	return join(entityClass, null, JoinType.Left);
+    }
+    
+    /**
+     * Performs a left join to the table represented by the specified entity class
+     * @param entityClass		Class of the entity representing the table to join to
+     * @param alias				The alias to use for the table
+     */
+    public JoinBuilder<T> crossJoin(Class<?> entityClass, String alias) {
+    	return join(entityClass, alias, JoinType.Left);
+    }
+    
+    /**
+     * Performs a cross join to the table with the specified name
+     * @param tableName		The table to join to
+     */
+    public JoinBuilder<T> crossJoin(String tableName) {
+    	return join(tableName, null, JoinType.Cross);
+    }
+    
+    /**
+     * Performs a cross join to the table with the specified name
+     * @param tableName		The table to join to
+     * @param alias			The alias to use for the table
+     */
+    public JoinBuilder<T> crossJoin(String tableName, String alias) {
+    	return join(tableName, alias, JoinType.Cross);
+    }
+    
+    private JoinBuilder<T> join(Class<?> entityClass, String alias, JoinType joinType) {
+    	try 
+    	{
+    		String tableName = (String)entityClass.getField("TABLE_NAME").get(null);
+    		return join(tableName, alias, joinType);
+    		
+    	} catch(IllegalAccessException ex) {
+    		return null;
+    	} catch(NoSuchFieldException ex) {
+    		return null;
+    	}
+    }
+    
+    private JoinBuilder<T> join(String tableName, String alias, JoinType joinType) {
+    	
+    	final JoinBuilder<T> jBuilder = new JoinBuilder<T>(this,tableName,joinType);
+    	jBuilder.alias(alias);
+    	
+    	joinBuilders.add(jBuilder);
+    	
+    	return jBuilder;
     }
 
     /** Adds the given properties to the ORDER BY section using ascending order. */
@@ -222,14 +350,27 @@ public class QueryBuilder<T> {
      * @param properties
      * @return
      */
-    public QueryBuilder<T> select(Property...properties) {
+    public QueryBuilder<T> select(Selectable...properties) {
+    	
     	selectColumns = new String[properties.length];
+    	tableAliases = new String[properties.length];
     	
     	for(int ii = 0; ii < properties.length; ii++) {
-    		selectColumns[ii] = properties[ii].columnName;
+   		
+    		selectColumns[ii] = properties[ii].getColumnName();
+    		
+    		if(isMasterTable(properties[ii].getColumnPrefix())) {
+    			tableAliases[ii] = "T";
+    		} else {
+    			tableAliases[ii] = properties[ii].getColumnPrefix();
+    		}
     	}
     	
     	return this;
+    }
+    
+    public boolean isMasterTable(String tableName) {
+    	return dao.getTablename().equalsIgnoreCase(tableName);
     }
 
     protected StringBuilder append(StringBuilder builder, Property property) {
@@ -268,6 +409,11 @@ public class QueryBuilder<T> {
         this.offset = offset;
         return this;
     }
+    
+    public QueryBuilder<T> distinct() {
+    	this.distinct = true;
+    	return this;
+    }
 
     /**
      * Builds a reusable query object (Query objects can be executed more efficiently than creating a QueryBuilder for
@@ -275,20 +421,18 @@ public class QueryBuilder<T> {
      */
     public Query<T> build() {
         String select;
-        if (joinBuilder == null || joinBuilder.length() == 0) {
-        	if(selectColumns != null) {
-        		select = InternalQueryDaoAccess.getStatements(dao).getSelectColumns(selectColumns);
-        	} else {
-        		select = InternalQueryDaoAccess.getStatements(dao).getSelectAll();	
-        	}
-        } else {
-        	if(selectColumns != null) {
-        		select = SqlUtils.createSqlSelect(dao.getTablename(), tablePrefix, selectColumns);
-        	} else {
-        		select = SqlUtils.createSqlSelect(dao.getTablename(), tablePrefix, dao.getAllColumns());	
-        	}
-        }
+        
+    	if(selectColumns != null) {
+    		select = InternalQueryDaoAccess.getStatements(dao).getSelectColumns(selectColumns, tableAliases, distinct);
+    	} else {
+    		select = InternalQueryDaoAccess.getStatements(dao).getSelectAll(distinct);	
+    	}
+        
         StringBuilder builder = new StringBuilder(select);
+        
+        for(JoinBuilder<T> jBuilder : joinBuilders) {
+        	builder.append(jBuilder.getJoinClause());
+        }
 
         appendWhereClause(builder, tablePrefix);
 
@@ -398,6 +542,14 @@ public class QueryBuilder<T> {
      */
     public List<T> list() {
         return build().list();
+    }
+    
+    public List<String> listOfFieldAsString(Property property) {
+        return select(property).build().listOfFieldAsString(property);
+    }
+    
+    public String uniqueFieldAsString(Property property) {
+        return select(property).build().uniqueFieldAsString(property);
     }
 
     /**
