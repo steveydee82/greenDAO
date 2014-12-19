@@ -123,7 +123,7 @@ as property>${property.columnName}<#if property_has_next>,</#if></#list>);");
         }
 </#if>
 <#else> <#-- nullable, non-protobuff -->
-        ${property.javaType} ${property.propertyName} = entity.get${property.propertyName?cap_first}();
+        ${property.javaType} ${property.propertyName} = entity.${property.propertyName};
         if (${property.propertyName} != null) {
             stmt.bind${toBindType[property.propertyType]}(${property_index + 1}, ${property.propertyName}<#if
  property.propertyType == "Boolean"> ? 1l: 0l</#if><#if property.propertyType == "Date">.getTime()</#if>);
@@ -215,11 +215,11 @@ as property>${property.columnName}<#if property_has_next>,</#if></#list>);");
         throw new UnsupportedOperationException("Protobuf objects cannot be modified");
 <#else> 
 <#list entity.properties as property>
-        entity.set${property.propertyName?cap_first}(<#if !property.notNull>cursor.isNull(offset + ${property_index}) ? null : </#if><#if
+        entity.${property.propertyName} = <#if !property.notNull>cursor.isNull(offset + ${property_index}) ? null : </#if><#if
             property.propertyType == "Byte">(byte) </#if><#if
             property.propertyType == "Date">new java.util.Date(</#if>cursor.get${toCursorType[property.propertyType]}(offset + ${property_index})<#if
             property.propertyType == "Boolean"> != 0</#if><#if
-            property.propertyType == "Date">)</#if>);
+            property.propertyType == "Date">)</#if>;
 </#list>
 </#if>
      }
@@ -230,7 +230,7 @@ as property>${property.columnName}<#if property_has_next>,</#if></#list>);");
 <#if entity.pkProperty??>
 <#if entity.pkProperty.propertyType == "Long">
 <#if !entity.protobuf>
-        entity.set${entity.pkProperty.propertyName?cap_first}(rowId);
+        entity.${entity.pkProperty.propertyName} = rowId;
 </#if>
         return rowId;
 <#else>
@@ -247,7 +247,7 @@ as property>${property.columnName}<#if property_has_next>,</#if></#list>);");
     public ${entity.pkType} getKey(${entity.className} entity) {
 <#if entity.pkProperty??>
         if(entity != null) {
-            return entity.get${entity.pkProperty.propertyName?cap_first}();
+            return entity.${entity.pkProperty.propertyName};
         } else {
             return null;
         }

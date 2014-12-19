@@ -57,7 +57,7 @@ as ifc>${ifc}<#if ifc_has_next>, </#if></#list></#if> {
 <#if property.notNull && complexTypes?seq_contains(property.propertyType)>
     /** Not-null value. */
 </#if>
-    private ${property.javaType} ${property.propertyName};
+    public ${property.javaType} ${property.propertyName};
 </#list>
 
 
@@ -135,22 +135,7 @@ property>${property.javaType} ${property.propertyName}<#if property_has_next>, <
     }
 
 </#if>
-<#list entity.properties as property>
-<#if property.notNull && complexTypes?seq_contains(property.propertyType)>
-    /** Not-null value. */
-</#if>
-    public ${property.javaType} get${property.propertyName?cap_first}() {
-        return ${property.propertyName};
-    }
 
-<#if property.notNull && complexTypes?seq_contains(property.propertyType)>
-    /** Not-null value; ensure this value is available before it is saved to the database. */
-</#if>
-    public void set${property.propertyName?cap_first}(${property.javaType} ${property.propertyName}) {
-        this.${property.propertyName} = ${property.propertyName};
-    }
-
-</#list>
 <#--
 ##########################################
 ########## To-One Relations ##############
