@@ -121,6 +121,15 @@ public class QueryBuilder<T> {
         whereConditions.add(or(cond1, cond2, condMore));
         return this;
     }
+    
+    /**
+     * Adds the given conditions to the where clause using an logical OR. To create new conditions, use the properties
+     * given in the generated dao classes.
+     */
+    public QueryBuilder<T> whereAnd(WhereCondition cond1, WhereCondition cond2, WhereCondition... condMore) {
+        whereConditions.add(and(cond1, cond2, condMore));
+        return this;
+    }
 
     /**
      * Creates a WhereCondition by combining the given conditions using OR. The returned WhereCondition must be used
@@ -369,6 +378,32 @@ public class QueryBuilder<T> {
     	return this;
     }
     
+    /**
+     * Sets the properties that will be returned. For use only if retrieving a Cursor using .cursor().
+     * The strings to be passed in will need to be qualified if necessary with table identifiers.
+     * @param properties
+     * @return
+     */
+    public QueryBuilder<T> select(String... columnNames) {
+    	
+    	selectColumns = new String[columnNames.length];
+    	tableAliases = new String[columnNames.length];
+    	
+    	for(int ii = 0; ii < columnNames.length; ii++) {
+   		
+    		final int dotIndex = columnNames[ii].indexOf('.');
+    		if(dotIndex > -1) {
+    			selectColumns[ii] = columnNames[ii].substring(dotIndex + 1);
+    			tableAliases[ii] = columnNames[ii].substring(0, dotIndex);
+    		} else {
+    			selectColumns[ii] = columnNames[ii];
+    			tableAliases[ii] = "";
+    		}
+    	}
+    	
+    	return this;
+    }
+    
     public boolean isMasterTable(String tableName) {
     	return dao.getTablename().equalsIgnoreCase(tableName);
     }
@@ -548,8 +583,60 @@ public class QueryBuilder<T> {
         return select(property).build().listOfFieldAsString(property);
     }
     
+    public List<String> listOfFieldAsString(String columnName) {
+        return select(columnName).build().listOfFieldAsString(columnName);
+    }
+    
     public String uniqueFieldAsString(Property property) {
         return select(property).build().uniqueFieldAsString(property);
+    }
+    
+    public List<Double> listOfFieldAsDouble(Property property) {
+        return select(property).build().listOfFieldAsDouble(property);
+    }
+    
+    public List<Double> listOfFieldAsDouble(String columnName) {
+        return select(columnName).build().listOfFieldAsDouble(columnName);
+    }
+    
+    public Double uniqueFieldAsDouble(Property property) {
+        return select(property).build().uniqueFieldAsDouble(property);
+    }
+    
+    public List<Integer> listOfFieldAsInteger(Property property) {
+        return select(property).build().listOfFieldAsInt(property);
+    }
+    
+    public List<Integer> listOfFieldAsInteger(String columnName) {
+        return select(columnName).build().listOfFieldAsInt(columnName);
+    }
+    
+    public Integer uniqueFieldAsInteger(Property property) {
+        return select(property).build().uniqueFieldAsInt(property);
+    }
+    
+    public List<Long> listOfFieldAsLong(Property property) {
+        return select(property).build().listOfFieldAsLong(property);
+    }
+    
+    public List<Long> listOfFieldAsLong(String columnName) {
+        return select(columnName).build().listOfFieldAsLong(columnName);
+    }
+    
+    public Long uniqueFieldAsLong(Property property) {
+        return select(property).build().uniqueFieldAsLong(property);
+    }
+    
+    public List<Byte[]> listOfFieldAsByteArray(Property property) {
+        return select(property).build().listOfFieldAsByteArray(property);
+    }
+    
+    public List<Byte[]> listOfFieldAsByteArray(String columnName) {
+        return select(columnName).build().listOfFieldAsByteArray(columnName);
+    }
+    
+    public Byte[] uniqueFieldAsByteArray(Property property) {
+        return select(property).build().uniqueFieldAsByteArray(property);
     }
 
     /**
@@ -613,6 +700,14 @@ public class QueryBuilder<T> {
      */
     public long count() {
         return buildCount().count();
+    }
+    
+    /**
+     * Returns true if the query returns any results. False if no results are returned.
+     * @return
+     */
+    public boolean any() {
+    	return buildCount().count() > 0;
     }
 
 }

@@ -31,6 +31,7 @@ public class TableStatements {
     private SQLiteStatement deleteStatement;
 
     private volatile String selectAll;
+    private volatile String selectColumns;
     private volatile String selectByKey;
     private volatile String selectByRowId;
     private volatile String selectKeys;
@@ -92,10 +93,10 @@ public class TableStatements {
     
     /** ends with an space to simplify appending to this string. */
     public String getSelectColumns(String[] columns, String[] aliases, boolean distinct) {
-        if (selectAll == null) {
-            selectAll = SqlUtils.createSqlSelect(tablename, aliases, "T", columns, distinct);
+        if (selectColumns == null) {
+        	selectColumns = SqlUtils.createSqlSelect(tablename, aliases, "T", columns, distinct);
         }
-        return selectAll;
+        return selectColumns;
     }
 
     public String getSelectKeys() {

@@ -21,12 +21,18 @@ import de.greenrobot.dao.DaoException;
 public class SqlUtils {
 
     public static StringBuilder appendColumn(StringBuilder builder, String column) {
-        builder.append('\'').append(column).append('\'');
+        builder.append(column);
         return builder;
     }
 
     public static StringBuilder appendColumn(StringBuilder builder, String tableAlias, String column) {
-        builder.append(tableAlias).append(".'").append(column).append('\'');
+    	
+    	if(tableAlias.length() > 0) {
+    		builder.append(tableAlias).append(".'").append(column).append('\'');	
+    	} else {
+    		builder.append(column);
+    	}
+        
         return builder;
     }
 

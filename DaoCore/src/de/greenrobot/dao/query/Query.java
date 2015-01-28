@@ -130,7 +130,17 @@ public class Query<T> extends AbstractQuery<T> {
      * @return				The values of the property for all matches
      */
     public List<String> listOfFieldAsString(Property property) {
-    	List<Object> values = listOfField(property, FieldType.String);
+    	return listOfFieldAsString(property.columnName);
+    }
+    
+    /**
+     * Returns a single string field of a list of results
+     * @param columnName	The column name to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<String> listOfFieldAsString(String columnName) {
+    	List<Object> values = listOfField(columnName, FieldType.String);
     	
     	List<String> typedValues = new ArrayList<String>();
     	
@@ -148,7 +158,17 @@ public class Query<T> extends AbstractQuery<T> {
      * @return				The values of the property for all matches
      */
     public List<Double> listOfFieldAsDouble(Property property) {
-    	List<Object> values = listOfField(property, FieldType.Double);
+    	return listOfFieldAsDouble(property.columnName);
+    }
+    
+    /**
+     * Returns a double field of a list of results
+     * @param columnName	The column name to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Double> listOfFieldAsDouble(String columnName) {
+    	List<Object> values = listOfField(columnName, FieldType.Double);
     	
     	List<Double> typedValues = new ArrayList<Double>();
     	
@@ -160,13 +180,23 @@ public class Query<T> extends AbstractQuery<T> {
     }
     
     /**
-     * Returns an integer field of a list of results
+     * Returns an int field of a list of results
      * @param property		The property to retrieve
      * @param fieldType		The type of the property
      * @return				The values of the property for all matches
      */
     public List<Integer> listOfFieldAsInt(Property property) {
-    	List<Object> values = listOfField(property, FieldType.Int);
+    	return listOfFieldAsInt(property.columnName);
+    }
+    
+    /**
+     * Returns an int field of a list of results
+     * @param columnName	The column name to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Integer> listOfFieldAsInt(String columnName) {
+    	List<Object> values = listOfField(columnName, FieldType.Int);
     	
     	List<Integer> typedValues = new ArrayList<Integer>();
     	
@@ -184,7 +214,17 @@ public class Query<T> extends AbstractQuery<T> {
      * @return				The values of the property for all matches
      */
     public List<Long> listOfFieldAsLong(Property property) {
-    	List<Object> values = listOfField(property, FieldType.Long);
+    	return listOfFieldAsLong(property.columnName);
+    }
+    
+    /**
+     * Returns a long field of a list of results
+     * @param columnName	The column name to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Long> listOfFieldAsLong(String columnName) {
+    	List<Object> values = listOfField(columnName, FieldType.Long);
     	
     	List<Long> typedValues = new ArrayList<Long>();
     	
@@ -196,13 +236,23 @@ public class Query<T> extends AbstractQuery<T> {
     }
     
     /**
-     * Returns a byte array string field of a list of results
+     * Returns a byte array field of a list of results
      * @param property		The property to retrieve
      * @param fieldType		The type of the property
      * @return				The values of the property for all matches
      */
     public List<Byte[]> listOfFieldAsByteArray(Property property) {
-    	List<Object> values = listOfField(property, FieldType.ByteArray);
+    	return listOfFieldAsByteArray(property.columnName);
+    }
+    
+    /**
+     * Returns a byte array field of a list of results
+     * @param columnName	The column name to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Byte[]> listOfFieldAsByteArray(String columnName) {
+    	List<Object> values = listOfField(columnName, FieldType.ByteArray);
     	
     	List<Byte[]> typedValues = new ArrayList<Byte[]>();
     	
@@ -284,17 +334,34 @@ public class Query<T> extends AbstractQuery<T> {
      * @return				The values of the property for all matches
      */
     public List<Object> listOfField(Property property, FieldType fieldType) {
+    	return listOfField(property.columnName, fieldType);
+    }
+    
+    /**
+     * Returns a single field of a list of results
+     * @param property		The property to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Object> listOfField(String columnName, FieldType fieldType) {
     	checkThread();
         Cursor cursor = dao.getDatabase().rawQuery(sql, parameters);
         
         List<Object> toReturn = new ArrayList<Object>();
         
-        int columnIndex = cursor.getColumnIndex(property.columnName);
-        
-        while(cursor.moveToNext()) {
-        	toReturn.add(getValueFromCursor(cursor, columnIndex, fieldType));
+        if(cursor.getCount() > 0) {
+	        int columnIndex = cursor.getColumnIndex(columnName);
+	        
+	        if(columnIndex == -1) {
+	        	columnIndex = cursor.getColumnIndex("'" + columnName + "'");
+	        }
+	        
+	        if(columnIndex != -1) {
+	        	while(cursor.moveToNext()) {
+		        	toReturn.add(getValueFromCursor(cursor, columnIndex, fieldType));
+		        }	
+	        }
         }
-        
         return toReturn;
     }
     

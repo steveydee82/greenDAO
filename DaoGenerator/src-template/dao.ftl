@@ -234,7 +234,7 @@ as property>${property.columnName}<#if property_has_next>,</#if></#list>);");
 </#if>
         return rowId;
 <#else>
-        return entity.get${entity.pkProperty.propertyName?cap_first}();
+        return entity.${entity.pkProperty.propertyName};
 </#if>
 <#else>
         // Unsupported or missing PK type
