@@ -16,10 +16,14 @@
 
 package de.greenrobot.dao;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import android.database.CrossProcessCursor;
 import android.database.Cursor;
@@ -65,6 +69,7 @@ public abstract class AbstractDao<T, K> implements Dao<T, K>  {
 
     protected final AbstractDaoSession session;
     protected final int pkOrdinal;
+    
 
     public AbstractDao(DaoConfig config) {
         this(config, null);
@@ -837,4 +842,22 @@ public abstract class AbstractDao<T, K> implements Dao<T, K>  {
     /** Returns true if the Entity class can be updated, e.g. for setting the PK after insert. */
     abstract protected boolean isEntityUpdateable();
 
+    protected Date getDate(String sqlDate) {
+    	
+    	if(sqlDate == null || sqlDate.trim().length() == 0) {
+    		return null;
+    	}
+    	try {
+    		return getSqliteDateFormat().parse(sqlDate);
+    	} catch(ParseException ex) {
+    		return null;
+    	}
+    }
+    
+    private static final java.text.SimpleDateFormat getSqliteDateFormat() {
+    	java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+    	format.setTimeZone(TimeZone.getTimeZone("UTC"));
+    	
+    	return format;
+    }
 }
