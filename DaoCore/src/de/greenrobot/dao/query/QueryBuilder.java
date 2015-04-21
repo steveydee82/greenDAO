@@ -49,15 +49,13 @@ import de.greenrobot.dao.query.WhereCondition.PropertyCondition;
  * @param <T>
  *            Entity class to create an query for.
  */
-public class QueryBuilder<T> {
+public class QueryBuilder<T> extends BaseBuilder {
 
     /** Set to true to debug the SQL. */
     public static boolean LOG_SQL;
 
     /** Set to see the given values. */
     public static boolean LOG_VALUES;
-
-    private StringBuilder orderBuilder;
 
     private List<JoinBuilder<T>> joinBuilders;
     
@@ -85,19 +83,13 @@ public class QueryBuilder<T> {
     }
 
     protected QueryBuilder(AbstractDao<T, ?> dao, String tablePrefix) {
+    	super(dao);
+    	
         this.dao = dao;
         this.tablePrefix = tablePrefix;
         values = new ArrayList<Object>();
         whereConditions = new ArrayList<WhereCondition>();
         joinBuilders = new ArrayList<JoinBuilder<T>>();
-    }
-
-    private void checkOrderBuilder() {
-        if (orderBuilder == null) {
-            orderBuilder = new StringBuilder();
-        } else if (orderBuilder.length() > 0) {
-            orderBuilder.append(",");
-        }
     }
 
     /**
@@ -107,7 +99,6 @@ public class QueryBuilder<T> {
     public QueryBuilder<T> where(WhereCondition cond, WhereCondition... condMore) {
         whereConditions.add(cond);
         for (WhereCondition whereCondition : condMore) {
-            checkCondition(whereCondition);
             whereConditions.add(whereCondition);
         }
         return this;
@@ -167,16 +158,10 @@ public class QueryBuilder<T> {
     }
 
     protected void addCondition(StringBuilder builder, List<Object> values, WhereCondition condition) {
-        checkCondition(condition);
         condition.appendTo(builder, tablePrefix);
         condition.appendValuesTo(values);
     }
 
-    protected void checkCondition(WhereCondition whereCondition) {
-        if (whereCondition instanceof PropertyCondition) {
-            checkProperty(((PropertyCondition) whereCondition).property);
-        }
-    }
 
     /** Not supported yet. */
 //    public <J> QueryBuilder<J> join(Class<J> entityClass, Property toOneProperty) {
@@ -325,22 +310,10 @@ public class QueryBuilder<T> {
         return this;
     }
 
-    private void orderAscOrDesc(String ascOrDescWithLeadingSpace, Property... properties) {
-        for (Property property : properties) {
-            checkOrderBuilder();
-            append(orderBuilder, property);
-            if (String.class.equals(property.type)) {
-                orderBuilder.append(" COLLATE LOCALIZED");
-            }
-            orderBuilder.append(ascOrDescWithLeadingSpace);
-        }
-    }
     
     /** Adds the given properties to the ORDER BY section using the given custom order. */
     public QueryBuilder<T> orderCustom(Property property, String customOrderForProperty) {
-        checkOrderBuilder();
-        append(orderBuilder, property).append(' ');
-        orderBuilder.append(customOrderForProperty);
+    	orderCustomInternal(property, customOrderForProperty);
         return this;
     }
 
@@ -349,8 +322,7 @@ public class QueryBuilder<T> {
      * orderDesc are prefered.
      */
     public QueryBuilder<T> orderRaw(String rawOrder) {
-        checkOrderBuilder();
-        orderBuilder.append(rawOrder);
+        orderRawInternal(rawOrder);
         return this;
     }
     
@@ -367,17 +339,13 @@ public class QueryBuilder<T> {
     	for(int ii = 0; ii < properties.length; ii++) {
    		
     		selectColumns[ii] = properties[ii].getColumnName();
-    		
-    		if(isMasterTable(properties[ii].getColumnPrefix())) {
-    			tableAliases[ii] = "T";
-    		} else {
-    			tableAliases[ii] = properties[ii].getColumnPrefix();
-    		}
+    		tableAliases[ii] = getTableAlias(properties[ii]);
     	}
     	
     	return this;
     }
     
+  
     /**
      * Sets the properties that will be returned. For use only if retrieving a Cursor using .cursor().
      * The strings to be passed in will need to be qualified if necessary with table identifiers.
@@ -404,32 +372,6 @@ public class QueryBuilder<T> {
     	return this;
     }
     
-    public boolean isMasterTable(String tableName) {
-    	return dao.getTablename().equalsIgnoreCase(tableName);
-    }
-
-    protected StringBuilder append(StringBuilder builder, Property property) {
-        checkProperty(property);
-        builder.append(tablePrefix).append('.').append('\'').append(property.columnName).append('\'');
-        return builder;
-    }
-
-    protected void checkProperty(Property property) {
-        if (dao != null) {
-            Property[] properties = dao.getProperties();
-            boolean found = false;
-            for (Property property2 : properties) {
-                if (property == property2) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                throw new DaoException("Property '" + property.name + "' is not part of " + dao);
-            }
-        }
-    }
-
     /** Limits the number of results returned by queries. */
     public QueryBuilder<T> limit(int limit) {
         this.limit = limit;
@@ -448,6 +390,20 @@ public class QueryBuilder<T> {
     public QueryBuilder<T> distinct() {
     	this.distinct = true;
     	return this;
+    }
+    
+    /**
+     * Unions this query with the given query
+     * @param unionQuery	The query to union with this one
+     * @return a UnionQueryBuilder for building Union queries
+     */
+    public UnionQueryBuilder union(QueryBuilder<?> unionQuery) {
+    	UnionQueryBuilder unionBuilder = new UnionQueryBuilder(this.dao);
+    	
+    	unionBuilder.union(this);
+    	unionBuilder.union(unionQuery);
+    	
+    	return unionBuilder;
     }
 
     /**

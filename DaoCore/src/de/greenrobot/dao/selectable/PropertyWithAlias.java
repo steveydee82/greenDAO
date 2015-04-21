@@ -1,4 +1,4 @@
-package de.greenrobot.dao.join;
+package de.greenrobot.dao.selectable;
 
 import de.greenrobot.dao.Property;
 import de.greenrobot.dao.Selectable;

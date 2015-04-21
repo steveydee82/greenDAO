@@ -19,9 +19,10 @@ package de.greenrobot.dao;
 import java.util.Collection;
 
 import de.greenrobot.dao.internal.SqlUtils;
-import de.greenrobot.dao.join.PropertyWithAlias;
 import de.greenrobot.dao.query.WhereCondition;
 import de.greenrobot.dao.query.WhereCondition.PropertyCondition;
+import de.greenrobot.dao.selectable.PropertyWithAlias;
+import de.greenrobot.dao.selectable.SqlSelectable;
 
 /**
  * Meta data describing a property mapped to a database column; used to create WhereCondition object used by the query builder.
@@ -35,7 +36,7 @@ public class Property implements Selectable {
     public final boolean primaryKey;
     public final String columnName;
     public final String tableName;
-
+    
     public Property(int ordinal, Class<?> type, String name, boolean primaryKey, String columnName, String tableName) {
         this.ordinal = ordinal;
         this.type = type;
@@ -122,6 +123,10 @@ public class Property implements Selectable {
     
     public PropertyWithAlias withAlias(String alias) {
     	return new PropertyWithAlias(this, alias);
+    }
+    
+    public Selectable as(String asClause) {
+    	return new SqlSelectable(getColumnName(), getColumnPrefix()).as(asClause);
     }
     
 	@Override

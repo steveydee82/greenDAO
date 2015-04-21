@@ -27,8 +27,8 @@ public class SqlUtils {
 
     public static StringBuilder appendColumn(StringBuilder builder, String tableAlias, String column) {
     	
-    	if(tableAlias.length() > 0) {
-    		builder.append(tableAlias).append(".'").append(column).append('\'');	
+    	if(tableAlias != null && tableAlias.length() > 0) {
+    		builder.append(tableAlias).append(".").append(column);	
     	} else {
     		builder.append(column);
     	}
