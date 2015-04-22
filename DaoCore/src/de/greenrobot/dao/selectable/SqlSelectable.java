@@ -1,5 +1,6 @@
 package de.greenrobot.dao.selectable;
 
+import de.greenrobot.dao.Property;
 import de.greenrobot.dao.Selectable;
 
 public class SqlSelectable implements Selectable {
@@ -19,6 +20,12 @@ public class SqlSelectable implements Selectable {
 	
 	public SqlSelectable as(String columnName) {
 		mColumnName = columnName;
+		
+		return this;
+	}
+	
+	public SqlSelectable as(Property property) {
+		mColumnName = property.columnName;
 		
 		return this;
 	}

@@ -27,7 +27,7 @@ import de.greenrobot.dao.Property;
  */
 public interface WhereCondition {
 
-    void appendTo(StringBuilder builder, String tableAlias);
+    void appendTo(StringBuilder builder, String masterTablePrefix);
 
     void appendValuesTo(List<Object> values);
 
@@ -135,11 +135,19 @@ public interface WhereCondition {
         }
 
         @Override
-        public void appendTo(StringBuilder builder, String tableAlias) {
-            if (tableAlias != null) {
-                builder.append(tableAlias).append('.');
+        public void appendTo(StringBuilder builder, String masterTablePrefix) {
+        	
+        	String prefix = property.getColumnPrefix();
+        	
+            if (prefix != null && prefix.length() > 0) {
+            	
+            	if(prefix.equals(masterTablePrefix)) {
+            		builder.append("T.");
+            	} else {
+            		builder.append(prefix).append('.');	
+            	}
             }
-            builder.append('\'').append(property.columnName).append('\'').append(op);
+            builder.append('\'').append(property.getColumnName()).append('\'').append(op);
         }
     }
 
@@ -162,7 +170,7 @@ public interface WhereCondition {
         }
 
         @Override
-        public void appendTo(StringBuilder builder, String tableAlias) {
+        public void appendTo(StringBuilder builder, String masterTablePrefix) {
             builder.append(string);
         }
 

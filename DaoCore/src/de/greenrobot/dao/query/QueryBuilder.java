@@ -22,7 +22,6 @@ import java.util.ListIterator;
 import android.database.Cursor;
 import de.greenrobot.dao.AbstractDao;
 import de.greenrobot.dao.AbstractDaoSession;
-import de.greenrobot.dao.DaoException;
 import de.greenrobot.dao.DaoLog;
 import de.greenrobot.dao.InternalQueryDaoAccess;
 import de.greenrobot.dao.Property;
@@ -30,7 +29,6 @@ import de.greenrobot.dao.Selectable;
 import de.greenrobot.dao.internal.SqlUtils;
 import de.greenrobot.dao.join.JoinBuilder;
 import de.greenrobot.dao.join.JoinType;
-import de.greenrobot.dao.query.WhereCondition.PropertyCondition;
 
 /**
  * Builds custom entity queries using constraints and parameters and without SQL (QueryBuilder creates SQL for you). To
@@ -158,7 +156,7 @@ public class QueryBuilder<T> extends BaseBuilder {
     }
 
     protected void addCondition(StringBuilder builder, List<Object> values, WhereCondition condition) {
-        condition.appendTo(builder, tablePrefix);
+        condition.appendTo(builder, mDao.getTablename());
         condition.appendValuesTo(values);
     }
 
@@ -520,7 +518,7 @@ public class QueryBuilder<T> extends BaseBuilder {
                     builder.append(" AND ");
                 }
                 WhereCondition condition = iter.next();
-                condition.appendTo(builder, tablePrefixOrNull);
+                condition.appendTo(builder, mDao.getTablename());
                 condition.appendValuesTo(values);
             }
         }

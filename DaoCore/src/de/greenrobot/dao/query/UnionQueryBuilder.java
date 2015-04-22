@@ -21,6 +21,9 @@ public class UnionQueryBuilder extends BaseBuilder {
 	private List<QueryBuilder<?>> mQueryBuilders;
 	private AbstractDao<?, ?> mDao;
 	
+	private String mSql;
+	private ArrayList<String> mParameters;
+	
 	protected UnionQueryBuilder(AbstractDao<?, ?> dao) {
 		super(dao);
 		
@@ -64,14 +67,14 @@ public class UnionQueryBuilder extends BaseBuilder {
         orderRawInternal(rawOrder);
         return this;
     }
+    
+    public String getSql() {
+    	build();
+    	return mSql;
+    }
 	
-	/**
-	 * Builds the union query and executes to return a cursor
-	 * @return Cursor for the results of the query
-	 */
-	public Cursor cursor() {
-		
-		boolean first = true;
+    private void build() {
+    	boolean first = true;
 
 		ArrayList<String> parameters = new ArrayList<String>();
 		
@@ -98,6 +101,16 @@ public class UnionQueryBuilder extends BaseBuilder {
 			sql.append(" ORDER BY ").append(orderBuilder);
 		}
 		
-		return mDao.getDatabase().rawQuery(sql.toString(), parameters.toArray(new String[parameters.size()]));
+		mSql = sql.toString();
+		mParameters = parameters;
+    }
+	/**
+	 * Builds the union query and executes to return a cursor
+	 * @return Cursor for the results of the query
+	 */
+	public Cursor cursor() {
+		
+		build();
+		return mDao.getDatabase().rawQuery(mSql, mParameters.toArray(new String[mParameters.size()]));
 	}
 }

@@ -6,7 +6,7 @@ import de.greenrobot.dao.Selectable;
 
 public class BaseBuilder {
 
-	private Dao<?, ?> mDao;
+	protected Dao<?, ?> mDao;
     protected StringBuilder orderBuilder;
 	
 	protected BaseBuilder(Dao<?, ?> dao) {
