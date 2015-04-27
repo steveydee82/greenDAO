@@ -26,7 +26,7 @@ public class JoinBuilder<T> {
 
 	private String getQualitifedColumn(Selectable column) {
 		if(mQueryBuilder.isMasterTable(column.getColumnPrefix())) {
-			return "T." + column.getColumnName();
+			return mQueryBuilder.getMasterTablePrefix() + "." + column.getColumnName();
 		} else {
 			return column.getColumnPrefix() + "." + column.getColumnName();
 		}

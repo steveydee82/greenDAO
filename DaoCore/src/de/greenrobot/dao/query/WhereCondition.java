@@ -27,8 +27,8 @@ import de.greenrobot.dao.Property;
  */
 public interface WhereCondition {
 
-    void appendTo(StringBuilder builder, String masterTablePrefix);
-
+    void appendTo(StringBuilder builder, String masterTableName, String masterTablePrefix);
+    
     void appendValuesTo(List<Object> values);
 
     public abstract static class AbstractCondition implements WhereCondition {
@@ -135,20 +135,44 @@ public interface WhereCondition {
         }
 
         @Override
-        public void appendTo(StringBuilder builder, String masterTablePrefix) {
+        public void appendTo(StringBuilder builder, String masterTableName, String masterTablePrefix) {
         	
         	String prefix = property.getColumnPrefix();
         	
             if (prefix != null && prefix.length() > 0) {
             	
-            	if(prefix.equals(masterTablePrefix)) {
-            		builder.append("T.");
+            	if(prefix.equals(masterTableName)) {
+            		builder.append(masterTablePrefix +".");
             	} else {
             		builder.append(prefix).append('.');	
             	}
             }
             builder.append('\'').append(property.getColumnName()).append('\'').append(op);
         }
+    }
+    
+    public static class ExistsCondition extends AbstractCondition {
+
+    	private Query<?> mExistsQuery;
+    	
+    	public ExistsCondition(QueryBuilder<?> existsQuery) {
+    		mExistsQuery = existsQuery.build();
+    	}
+    	
+		@Override
+		public void appendTo(StringBuilder builder, String masterTableName, String masterTablePrefix) {
+			builder.append("EXISTS (");
+			builder.append(mExistsQuery.sql);
+			builder.append(")");
+		}
+		
+		@Override
+		public void appendValuesTo(List<Object> valuesTarget) {
+			for(Object value : mExistsQuery.parameters) {
+				valuesTarget.add(value);
+			}
+		}
+    	
     }
 
     public static class StringCondition extends AbstractCondition {
@@ -170,7 +194,7 @@ public interface WhereCondition {
         }
 
         @Override
-        public void appendTo(StringBuilder builder, String masterTablePrefix) {
+        public void appendTo(StringBuilder builder, String masterTableName, String masterTablePrefix) {
             builder.append(string);
         }
 

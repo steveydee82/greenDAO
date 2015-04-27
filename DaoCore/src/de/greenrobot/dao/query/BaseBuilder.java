@@ -8,9 +8,11 @@ public class BaseBuilder {
 
 	protected Dao<?, ?> mDao;
     protected StringBuilder orderBuilder;
+    protected String mTablePrefix;
 	
-	protected BaseBuilder(Dao<?, ?> dao) {
+	protected BaseBuilder(Dao<?, ?> dao, String tablePrefix) {
 		mDao = dao;
+		mTablePrefix = tablePrefix;
 	}
 	
 	private void checkOrderBuilder() {
@@ -58,7 +60,7 @@ public class BaseBuilder {
 
 	protected String getTableAlias(Selectable s) {
 		if (isMasterTable(s.getColumnPrefix())) {
-			return "T";
+			return mTablePrefix;
 		} else {
 			return s.getColumnPrefix();
 		}

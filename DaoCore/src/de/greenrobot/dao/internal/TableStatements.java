@@ -80,10 +80,12 @@ public class TableStatements {
     
     /** ends with an space to simplify appending to this string. */
     public String getSelectAll(boolean distinct) {
-        if (selectAll == null) {
-            selectAll = SqlUtils.createSqlSelect(tablename, "T", allColumns, distinct);
-        }
-        return selectAll;
+        return getSelectAll(distinct, "T");
+    }
+    
+    /** ends with an space to simplify appending to this string. */
+    public String getSelectAll(boolean distinct, String tablePrefix) {
+    	return SqlUtils.createSqlSelect(tablename, tablePrefix, allColumns, distinct);
     }
     
     public String getSelectColumns(String[] columns, String[] aliases) {
@@ -92,7 +94,12 @@ public class TableStatements {
     
     /** ends with an space to simplify appending to this string. */
     public String getSelectColumns(String[] columns, String[] aliases, boolean distinct) {
-        return SqlUtils.createSqlSelect(tablename, aliases, "T", columns, distinct);
+        return getSelectColumns(columns, aliases, "T", distinct);
+    }
+    
+    /** ends with an space to simplify appending to this string. */
+    public String getSelectColumns(String[] columns, String[] aliases, String tableAlias, boolean distinct) {
+        return SqlUtils.createSqlSelect(tablename, aliases, tableAlias, columns, distinct);
     }
 
     public String getSelectKeys() {

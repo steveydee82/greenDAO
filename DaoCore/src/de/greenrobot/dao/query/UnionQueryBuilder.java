@@ -18,6 +18,8 @@ import android.database.Cursor;
  */
 public class UnionQueryBuilder extends BaseBuilder {
 
+	private List<String> mRawSqlClauses;
+	
 	private List<QueryBuilder<?>> mQueryBuilders;
 	private AbstractDao<?, ?> mDao;
 	
@@ -25,9 +27,10 @@ public class UnionQueryBuilder extends BaseBuilder {
 	private ArrayList<String> mParameters;
 	
 	protected UnionQueryBuilder(AbstractDao<?, ?> dao) {
-		super(dao);
+		super(dao, "T");
 		
 		mQueryBuilders = new ArrayList<QueryBuilder<?>>();
+		mRawSqlClauses = new ArrayList<String>();
 		mDao = dao;
 		
 	}
@@ -37,6 +40,12 @@ public class UnionQueryBuilder extends BaseBuilder {
 			throw new DaoException("Cannot add a query with an ORDER BY to a UNION clause. Please use .union(...).orderby(...)");
 		}
 		mQueryBuilders.add(queryBuilder);
+		return this;
+	}
+	
+	public UnionQueryBuilder union(String sql) {
+		mRawSqlClauses.add(sql);
+		
 		return this;
 	}
 	
@@ -96,6 +105,17 @@ public class UnionQueryBuilder extends BaseBuilder {
 			
 			first = false;
         }
+		
+		for(String rawSql : mRawSqlClauses) {
+			
+			if(!first) {
+				sql.append(" UNION ");
+			}
+			
+			sql.append(rawSql);
+			
+			first = false;
+		}
 		
 		if (orderBuilder != null && orderBuilder.length() > 0) {
 			sql.append(" ORDER BY ").append(orderBuilder);

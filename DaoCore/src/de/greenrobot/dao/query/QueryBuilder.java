@@ -61,7 +61,6 @@ public class QueryBuilder<T> extends BaseBuilder {
 
     private final List<Object> values;
     private final AbstractDao<T, ?> dao;
-    private final String tablePrefix;
 
     private Integer limit;
 
@@ -81,15 +80,22 @@ public class QueryBuilder<T> extends BaseBuilder {
     }
 
     protected QueryBuilder(AbstractDao<T, ?> dao, String tablePrefix) {
-    	super(dao);
+    	super(dao, tablePrefix);
     	
         this.dao = dao;
-        this.tablePrefix = tablePrefix;
         values = new ArrayList<Object>();
         whereConditions = new ArrayList<WhereCondition>();
         joinBuilders = new ArrayList<JoinBuilder<T>>();
     }
+    
+    public QueryBuilder<T> masterTablePrefix(String prefix) {
+    	mTablePrefix = prefix;
+    	return this;
+    }
 
+    public String getMasterTablePrefix() {
+    	return mTablePrefix;
+    }
     /**
      * Adds the given conditions to the where clause using an logical AND. To create new conditions, use the properties
      * given in the generated dao classes.
@@ -156,7 +162,7 @@ public class QueryBuilder<T> extends BaseBuilder {
     }
 
     protected void addCondition(StringBuilder builder, List<Object> values, WhereCondition condition) {
-        condition.appendTo(builder, mDao.getTablename());
+        condition.appendTo(builder, mDao.getTablename(), mTablePrefix);
         condition.appendValuesTo(values);
     }
 
@@ -403,6 +409,20 @@ public class QueryBuilder<T> extends BaseBuilder {
     	
     	return unionBuilder;
     }
+    
+    /**
+     * Unions this query with the given query
+     * @param unionQuery	The query to union with this one
+     * @return a UnionQueryBuilder for building Union queries
+     */
+    public UnionQueryBuilder union(String unionQuery) {
+    	UnionQueryBuilder unionBuilder = new UnionQueryBuilder(this.dao);
+    	
+    	unionBuilder.union(this);
+    	unionBuilder.union(unionQuery);
+    	
+    	return unionBuilder;
+    }
 
     /**
      * Builds a reusable query object (Query objects can be executed more efficiently than creating a QueryBuilder for
@@ -412,9 +432,9 @@ public class QueryBuilder<T> extends BaseBuilder {
         String select;
         
     	if(selectColumns != null) {
-    		select = InternalQueryDaoAccess.getStatements(dao).getSelectColumns(selectColumns, tableAliases, distinct);
+    		select = InternalQueryDaoAccess.getStatements(dao).getSelectColumns(selectColumns, tableAliases, mTablePrefix, distinct);
     	} else {
-    		select = InternalQueryDaoAccess.getStatements(dao).getSelectAll(distinct);	
+    		select = InternalQueryDaoAccess.getStatements(dao).getSelectAll(distinct, mTablePrefix);	
     	}
         
         StringBuilder builder = new StringBuilder(select);
@@ -423,7 +443,7 @@ public class QueryBuilder<T> extends BaseBuilder {
         	builder.append(jBuilder.getJoinClause());
         }
 
-        appendWhereClause(builder, tablePrefix);
+        appendWhereClause(builder, mTablePrefix);
 
         if (orderBuilder != null && orderBuilder.length() > 0) {
             builder.append(" ORDER BY ").append(orderBuilder);
@@ -469,13 +489,13 @@ public class QueryBuilder<T> extends BaseBuilder {
 
         // tablePrefix gets replaced by table name below. Don't use tableName here because it causes trouble when
         // table name ends with tablePrefix.
-        appendWhereClause(builder, tablePrefix);
+        appendWhereClause(builder, mTablePrefix);
 
         String sql = builder.toString();
 
         // Remove table aliases, not supported for DELETE queries.
         // TODO(?): don't create table aliases in the first place.
-        sql = sql.replace(tablePrefix + ".'", tablename + ".'");
+        sql = sql.replace(mTablePrefix + ".'", tablename + ".'");
 
         if (LOG_SQL) {
             DaoLog.d("Built SQL for delete query: " + sql);
@@ -493,9 +513,9 @@ public class QueryBuilder<T> extends BaseBuilder {
      */
     public CountQuery<T> buildCount() {
         String tablename = dao.getTablename();
-        String baseSql = SqlUtils.createSqlSelectCountStar(tablename, tablePrefix);
+        String baseSql = SqlUtils.createSqlSelectCountStar(tablename, mTablePrefix);
         StringBuilder builder = new StringBuilder(baseSql);
-        appendWhereClause(builder, tablePrefix);
+        appendWhereClause(builder, mTablePrefix);
         String sql = builder.toString();
 
         if (LOG_SQL) {
@@ -518,7 +538,7 @@ public class QueryBuilder<T> extends BaseBuilder {
                     builder.append(" AND ");
                 }
                 WhereCondition condition = iter.next();
-                condition.appendTo(builder, mDao.getTablename());
+                condition.appendTo(builder, mDao.getTablename(), mTablePrefix);
                 condition.appendValuesTo(values);
             }
         }
