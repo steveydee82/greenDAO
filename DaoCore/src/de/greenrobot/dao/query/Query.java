@@ -264,6 +264,34 @@ public class Query<T> extends AbstractQuery<T> {
     }
     
     /**
+     * Returns a boolean field of a list of results
+     * @param property		The property to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Boolean> listOfFieldAsBoolean(Property property) {
+    	return listOfFieldAsBoolean(property.columnName);
+    }
+    
+    /**
+     * Returns boolean field of a list of results
+     * @param columnName	The column name to retrieve
+     * @param fieldType		The type of the property
+     * @return				The values of the property for all matches
+     */
+    public List<Boolean> listOfFieldAsBoolean(String columnName) {
+    	List<Object> values = listOfField(columnName, FieldType.Boolean);
+    	
+    	List<Boolean> typedValues = new ArrayList<Boolean>();
+    	
+    	for(Object value: values) {
+    		typedValues.add((Boolean)value);
+    	}
+    	
+    	return typedValues;
+    }
+    
+    /**
      * Returns a single field of a single result as a string
      * @param property		The property to retrieve
      * @return				The value of the property
@@ -306,6 +334,15 @@ public class Query<T> extends AbstractQuery<T> {
      */
     public Byte[] uniqueFieldAsByteArray(Property property) {
     	return (Byte[])uniqueField(property, FieldType.ByteArray);
+    }
+    
+    /**
+     * Returns a single field of a single result as a boolean
+     * @param property		The property to retrieve
+     * @return				The value of the property
+     */
+    public Boolean uniqueFieldAsBoolean(Property property) {
+        return (Boolean)uniqueField(property, FieldType.Boolean);
     }
     
     /**
@@ -378,6 +415,8 @@ public class Query<T> extends AbstractQuery<T> {
 	    		return cursor.getInt(columnIndex);
 	    	case Long:
 	    		return cursor.getLong(columnIndex);
+	    	case Boolean:
+	    		return cursor.getInt(columnIndex) == 1;
 	    	}
     	
     	return null;

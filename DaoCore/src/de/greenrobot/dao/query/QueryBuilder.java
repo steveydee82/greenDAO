@@ -612,6 +612,18 @@ public class QueryBuilder<T> extends BaseBuilder {
     public Byte[] uniqueFieldAsByteArray(Property property) {
         return select(property).build().uniqueFieldAsByteArray(property);
     }
+    
+    public List<Boolean> listOfFieldAsBoolean(Property property) {
+        return select(property).build().listOfFieldAsBoolean(property);
+    }
+    
+    public List<Boolean> listOfFieldAsBoolean(String columnName) {
+        return select(columnName).build().listOfFieldAsBoolean(columnName);
+    }
+    
+    public Boolean uniqueFieldAsBoolean(Property property) {
+        return select(property).build().uniqueFieldAsBoolean(property);
+    }
 
     /**
      * Shorthand for {@link QueryBuilder#build() build()}.{@link Query#listLazy() listLazy()}; see

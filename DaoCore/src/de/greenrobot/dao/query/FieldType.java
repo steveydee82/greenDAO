@@ -5,5 +5,6 @@ public enum FieldType {
 	Long,
 	Int,
 	Double,
-	ByteArray
+	ByteArray,
+	Boolean
 }
